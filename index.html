@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rogelio's Fitness & Recomposition Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neutral: {
+                            50: '#fafafa',
+                            100: '#f5f5f5',
+                            200: '#e5e5e5',
+                            800: '#262626',
+                            900: '#171717',
+                        },
+                        accent: {
+                            light: '#14b8a6', // Teal 500
+                            dark: '#0f766e',  // Teal 700
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Chart Container Requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        
+        /* Custom Scrollbar for neatness */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tab-btn.active {
+            border-bottom-color: #0f766e;
+            color: #0f766e;
+            font-weight: 600;
+        }
+        .day-btn.active {
+            background-color: #0f766e;
+            color: white;
+            border-color: #0f766e;
+        }
+    </style>
+</head>
+<body class="bg-neutral-50 text-neutral-800 font-sans antialiased">
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <header class="mb-8 bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-neutral-900 mb-1">Co-op Fitness Dashboard</h1>
+                <p class="text-neutral-500">Shared meal prep & training strategies for Edmonton PhD students.</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                <div class="bg-neutral-100 p-3 rounded-lg border border-neutral-200 flex-1">
+                    <span class="block text-accent-dark font-bold text-sm uppercase tracking-wider mb-1">Rogelio (You)</span>
+                    <span class="block text-neutral-600 text-xs mb-1">38yo &bull; 68 kg &bull; 168 cm</span>
+                    <span class="font-semibold text-neutral-800 text-sm">Goal: Chest/Abs Recomp</span>
+                </div>
+                <div class="bg-neutral-100 p-3 rounded-lg border border-neutral-200 flex-1">
+                    <span class="block text-accent-dark font-bold text-sm uppercase tracking-wider mb-1">Ruilin</span>
+                    <span class="block text-neutral-600 text-xs mb-1">Chinese &bull; 95 kg &bull; 185 cm</span>
+                    <span class="font-semibold text-neutral-800 text-sm">Goal: Drop to 85kg</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="flex overflow-x-auto border-b border-neutral-200 mb-8 pb-1 gap-6">
+        <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn active pb-2 border-b-2 border-transparent text-neutral-500 hover:text-neutral-800 transition whitespace-nowrap">Dashboard & Strategy</button>
+        <button onclick="switchTab('schedule')" id="tab-schedule" class="tab-btn pb-2 border-b-2 border-transparent text-neutral-500 hover:text-neutral-800 transition whitespace-nowrap">Daily Routine</button>
+        <button onclick="switchTab('diet')" id="tab-diet" class="tab-btn pb-2 border-b-2 border-transparent text-neutral-500 hover:text-neutral-800 transition whitespace-nowrap">7-Day Diet Plan</button>
+        <button onclick="switchTab('workout')" id="tab-workout" class="tab-btn pb-2 border-b-2 border-transparent text-neutral-500 hover:text-neutral-800 transition whitespace-nowrap">7-Day Gym Plan</button>
+    </nav>
+
+    <section id="content-overview" class="tab-content fade-in">
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-2">Dual Strategy Overview</h2>
+            <p class="text-neutral-600">You both have different bodies but can use the same kitchen. <strong>Rogelio</strong> needs ~2,000 kcal for body recomposition (building muscle while losing fat). <strong>Ruilin</strong> needs ~2,400 kcal. Because he is taller, heavier, and highly active (20 hrs/week in a restaurant), his metabolism burns more. Dropping from 95kg to 85kg is the perfect target for his 185cm height, bringing him into a healthy BMI range.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
+                <h3 class="text-lg font-semibold mb-4 border-b pb-2">The "Shared Kitchen" Protocol</h3>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex items-start">
+                        <span class="text-accent-dark mr-2 text-xl">&#10003;</span>
+                        <span><strong>One Base Recipe, Two Plates:</strong> You will cook the same Pan-Asian meals (blending Filipino and Chinese profiles like soy, garlic, ginger, and rice). The only difference is the portion sizes on your plates.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-accent-dark mr-2 text-xl">&#10003;</span>
+                        <span><strong>Ruilin's Shift Fuel:</strong> Since he works in a restaurant, he must time his largest carb intake (rice) <em>before</em> his shift to give him energy for standing, minimizing snacking on restaurant food.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-accent-dark mr-2 text-xl">&#10003;</span>
+                        <span><strong>Shared Groceries:</strong> Buying eggs, rice, chicken breast, and broccoli in bulk at Costco will cut your grocery bills by 30-40%.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
+                <h3 class="text-lg font-semibold mb-4 text-center">Projected 12-Week Progress</h3>
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
+                <p class="text-xs text-center text-neutral-500 mt-2">Ruilin steadily drops weight; Rogelio maintains weight but drops body fat.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="content-schedule" class="tab-content hidden fade-in">
+        <div class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-semibold mb-2">Ideal PhD Daily Schedule</h2>
+                <p class="text-neutral-600">Structure is the key to balancing a PhD and fitness. Switch between your focused weekday routine, your Saturday recovery, and your Sunday reset.</p>
+            </div>
+            
+            <div class="flex bg-neutral-200 p-1 rounded-lg shrink-0 overflow-x-auto">
+                <button onclick="toggleSchedule('weekday')" id="btn-sched-weekday" class="px-4 py-2 text-sm font-semibold rounded-md bg-white shadow-sm text-neutral-800 transition-all whitespace-nowrap">Mon-Fri</button>
+                <button onclick="toggleSchedule('saturday')" id="btn-sched-saturday" class="px-4 py-2 text-sm font-semibold rounded-md text-neutral-500 hover:text-neutral-700 transition-all whitespace-nowrap">Saturday</button>
+                <button onclick="toggleSchedule('sunday')" id="btn-sched-sunday" class="px-4 py-2 text-sm font-semibold rounded-md text-neutral-500 hover:text-neutral-700 transition-all whitespace-nowrap">Sunday</button>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-neutral-200">
+            
+            <div id="schedule-weekday" class="relative border-l-2 border-neutral-200 ml-3 md:ml-6 space-y-8 fade-in">
+                
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-accent-light rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">07:00 AM</span>
+                        <h4 class="text-md font-semibold text-accent-dark uppercase tracking-wide">Wake Up & Prime</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-neutral-50 p-3 rounded border border-neutral-100">Drink 500ml of water immediately. Light stretching. Review today's top 3 priorities (1 for PhD, 1 for Fitness, 1 for Life).</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-3 h-3 bg-neutral-300 rounded-full -left-[7px] top-1.5"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="font-mono text-sm text-neutral-500 w-24">07:30 AM</span>
+                        <h4 class="text-sm font-semibold text-neutral-800">Breakfast</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600">High protein breakfast to break the fast. Coffee or Tea.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-blue-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">08:30 AM</span>
+                        <h4 class="text-md font-semibold text-blue-700 uppercase tracking-wide">Deep Academic Work</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-blue-50 p-3 rounded border border-blue-100"><strong>Paper Writing & Literature Review.</strong> Your brain is sharpest in the morning. Do the hardest cognitive tasks before checking emails or dealing with lab chaos. Block out distractions.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-purple-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">10:30 AM</span>
+                        <h4 class="text-md font-semibold text-purple-700 uppercase tracking-wide">Experiments & Lab Work</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-purple-50 p-3 rounded border border-purple-100">Transition to the lab bench or technical setup. Run your primary experiments for the day.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-3 h-3 bg-neutral-300 rounded-full -left-[7px] top-1.5"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="font-mono text-sm text-neutral-500 w-24">12:30 PM</span>
+                        <h4 class="text-sm font-semibold text-neutral-800">Lunch Break</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600">Eat your pre-packed lunch from yesterday's prep. Step outside the lab to decompress.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-3 h-3 bg-neutral-300 rounded-full -left-[7px] top-1.5"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="font-mono text-sm text-neutral-500 w-24">01:30 PM</span>
+                        <h4 class="text-sm font-semibold text-neutral-800">Data, Meetings & Admin</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600">Analyze morning experiment data. Attend meetings with your PI or research group. Answer emails.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-red-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">05:00 PM</span>
+                        <h4 class="text-md font-semibold text-red-600 uppercase tracking-wide">Gym / Workout</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-red-50 p-3 rounded border border-red-100">Leave the lab mentally behind. Head to the gym for your 60-minute workout. Let out the academic stress on the weights.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-orange-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">07:00 PM</span>
+                        <h4 class="text-md font-semibold text-orange-600 uppercase tracking-wide">Co-op Cooking & Dinner</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-orange-50 p-3 rounded border border-orange-100">Team up with Ruilin in the kitchen. Cook the base meal, divide into your specific portions. Pack the leftover portions into Tupperware for tomorrow's lunch immediately.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-3 h-3 bg-neutral-300 rounded-full -left-[7px] top-1.5"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="font-mono text-sm text-neutral-500 w-24">08:30 PM</span>
+                        <h4 class="text-sm font-semibold text-neutral-800">Flex Time / Social</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600">Free time. Call family in the Philippines, watch a show, play games, or do light reading. No heavy PhD work allowed here to prevent burnout.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-indigo-900 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">11:00 PM</span>
+                        <h4 class="text-md font-semibold text-indigo-900 uppercase tracking-wide">Wind Down & Sleep</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-indigo-50 p-3 rounded border border-indigo-100">Screen curfew. Read a non-academic book. Try to be asleep by <strong>12:00 MN</strong> to ensure a solid 7 hours of recovery for your brain and muscles.</p>
+                </div>
+            </div>
+
+            <div id="schedule-saturday" class="relative border-l-2 border-neutral-200 ml-3 md:ml-6 space-y-8 hidden fade-in">
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-accent-light rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">08:30 AM</span>
+                        <h4 class="text-md font-semibold text-accent-dark uppercase tracking-wide">Sleep In & Recover</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-neutral-50 p-3 rounded border border-neutral-100">Your body grows muscle while you sleep. Take the extra 1.5 hours to recover from the week's intense training and academic stress.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-3 h-3 bg-neutral-300 rounded-full -left-[7px] top-1.5"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="font-mono text-sm text-neutral-500 w-24">09:30 AM</span>
+                        <h4 class="text-sm font-semibold text-neutral-800">Big Breakfast</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600">Enjoy a slower morning. Make something more elaborate like Protein Pancakes or a large omelette. Coordinate with Ruilin.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-yellow-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">11:00 AM</span>
+                        <h4 class="text-md font-semibold text-yellow-700 uppercase tracking-wide">Hobbies & Flex Time</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-yellow-50 p-3 rounded border border-yellow-100">Do things completely unrelated to your PhD. Play video games, read for pleasure, or just relax. <em>Only use this time for PhD work if you are strictly behind on a critical deadline.</em></p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-3 h-3 bg-neutral-300 rounded-full -left-[7px] top-1.5"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="font-mono text-sm text-neutral-500 w-24">01:30 PM</span>
+                        <h4 class="text-sm font-semibold text-neutral-800">Lunch</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600">Light lunch (e.g., leftovers or a wrap) to fuel your afternoon activities.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-sky-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">03:00 PM</span>
+                        <h4 class="text-md font-semibold text-sky-700 uppercase tracking-wide">Active Recovery / Sports</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-sky-50 p-3 rounded border border-sky-100">Play badminton with Ruilin, join a pickup basketball game, or go for a long walk in the Edmonton River Valley. Move for fun, not for reps.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-orange-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">06:30 PM</span>
+                        <h4 class="text-md font-semibold text-orange-600 uppercase tracking-wide">Dinner / Cheat Meal & Social</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-orange-50 p-3 rounded border border-orange-100">This is your psychological break. Go out to eat with friends, order takeout, and don't worry excessively about macros for this one meal.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-indigo-900 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">11:30 PM</span>
+                        <h4 class="text-md font-semibold text-indigo-900 uppercase tracking-wide">Sleep</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-indigo-50 p-3 rounded border border-indigo-100">Head to bed to rest up for Sunday's prep day.</p>
+                </div>
+            </div>
+
+            <div id="schedule-sunday" class="relative border-l-2 border-neutral-200 ml-3 md:ml-6 space-y-8 hidden fade-in">
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-accent-light rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">08:00 AM</span>
+                        <h4 class="text-md font-semibold text-accent-dark uppercase tracking-wide">Wake Up</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-neutral-50 p-3 rounded border border-neutral-100">Start the day slightly earlier to beat the crowds for errands.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-3 h-3 bg-neutral-300 rounded-full -left-[7px] top-1.5"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="font-mono text-sm text-neutral-500 w-24">08:30 AM</span>
+                        <h4 class="text-sm font-semibold text-neutral-800">Quick Breakfast</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600">Oatmeal or a protein shake. Keep it light and fast.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-emerald-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">09:30 AM</span>
+                        <h4 class="text-md font-semibold text-emerald-700 uppercase tracking-wide">Grocery Run (Costco)</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-emerald-50 p-3 rounded border border-emerald-100">Hit up Costco/Superstore as early as possible with Ruilin. Buy all bulk proteins, rice, eggs, and veggies for the week before the afternoon rush.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-purple-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">11:30 AM</span>
+                        <h4 class="text-md font-semibold text-purple-700 uppercase tracking-wide">Cleaning & Laundry</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-purple-50 p-3 rounded border border-purple-100">Start the washing machine (gym clothes and lab clothes). Vacuum, clean the kitchen counters, and reset the apartment for a fresh week.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-3 h-3 bg-neutral-300 rounded-full -left-[7px] top-1.5"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="font-mono text-sm text-neutral-500 w-24">01:30 PM</span>
+                        <h4 class="text-sm font-semibold text-neutral-800">Lunch</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600">Eat a quick lunch using ingredients you just bought.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-orange-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">02:30 PM</span>
+                        <h4 class="text-md font-semibold text-orange-600 uppercase tracking-wide">Batch Meal Prep</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-orange-50 p-3 rounded border border-orange-100">Cook the large batch of rice in the rice cooker. Pre-chop vegetables and store them in containers. Marinate chicken/beef for Mon-Wed so dinners take only 15 minutes to cook during the week.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-3 h-3 bg-neutral-300 rounded-full -left-[7px] top-1.5"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="font-mono text-sm text-neutral-500 w-24">06:00 PM</span>
+                        <h4 class="text-sm font-semibold text-neutral-800">Dinner & Relax</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600">Eat a healthy, home-cooked meal using your freshly prepped food.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-blue-500 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">08:30 PM</span>
+                        <h4 class="text-md font-semibold text-blue-700 uppercase tracking-wide">Weekly Review & Planning</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-blue-50 p-3 rounded border border-blue-100">Sit down for 20 minutes. Review what experiments you need to run this week, what papers you need to read, and confirm your gym schedule. A planned week reduces PhD stress.</p>
+                </div>
+
+                <div class="relative pl-6 md:pl-8">
+                    <div class="absolute w-4 h-4 bg-indigo-900 rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-1">
+                        <span class="text-lg font-bold text-neutral-900 w-24">10:30 PM</span>
+                        <h4 class="text-md font-semibold text-indigo-900 uppercase tracking-wide">Wind Down & Sleep</h4>
+                    </div>
+                    <p class="text-sm text-neutral-600 bg-indigo-50 p-3 rounded border border-indigo-100">Go to bed early to reset your circadian rhythm for Monday morning at the lab.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="content-diet" class="tab-content hidden fade-in">
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-2">Co-op Nutrition Protocol</h2>
+            <p class="text-neutral-600 mb-4">You cook together, but portion separately. Recipes utilize Filipino/Chinese staple flavors (garlic, ginger, soy sauce, oyster sauce) to make meal prep familiar and easy.</p>
+            
+            <button onclick="openCostcoList()" class="bg-accent-dark hover:bg-teal-800 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center shadow-sm">
+                <span class="mr-2 text-lg">&#128722;</span> View Shared Costco Grocery List
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="col-span-1 bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
+                <h3 class="text-lg font-semibold mb-4 text-center">Daily Macro Targets</h3>
+                
+                <div class="mb-6">
+                    <p class="text-sm font-bold text-neutral-800 text-center mb-1">Rogelio (~2,000 kcal)</p>
+                    <div class="w-full bg-neutral-200 rounded-full h-2.5 mb-1 flex overflow-hidden">
+                        <div class="bg-accent-dark h-2.5" style="width: 32%"></div>
+                        <div class="bg-neutral-400 h-2.5" style="width: 41%"></div>
+                        <div class="bg-neutral-600 h-2.5" style="width: 27%"></div>
+                    </div>
+                    <p class="text-xs text-center text-neutral-500">160g Protein / 200g Carbs / 60g Fats</p>
+                </div>
+
+                <div>
+                    <p class="text-sm font-bold text-neutral-800 text-center mb-1">Ruilin (~2,400 kcal)</p>
+                    <div class="w-full bg-neutral-200 rounded-full h-2.5 mb-1 flex overflow-hidden">
+                        <div class="bg-accent-dark h-2.5" style="width: 30%"></div>
+                        <div class="bg-neutral-400 h-2.5" style="width: 45%"></div>
+                        <div class="bg-neutral-600 h-2.5" style="width: 25%"></div>
+                    </div>
+                    <p class="text-xs text-center text-neutral-500">180g Protein / 270g Carbs / 65g Fats</p>
+                </div>
+                
+                <div class="mt-4 flex justify-center gap-3 text-xs text-neutral-600">
+                    <span class="flex items-center"><div class="w-3 h-3 bg-accent-dark rounded-full mr-1"></div> Protein</span>
+                    <span class="flex items-center"><div class="w-3 h-3 bg-neutral-400 rounded-full mr-1"></div> Carbs</span>
+                    <span class="flex items-center"><div class="w-3 h-3 bg-neutral-600 rounded-full mr-1"></div> Fats</span>
+                </div>
+            </div>
+
+            <div class="col-span-1 lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
+                <div class="flex flex-wrap gap-2 mb-6" id="diet-day-selectors">
+                    </div>
+                
+                <div id="diet-details" class="bg-neutral-50 p-5 rounded-lg border border-neutral-100">
+                    <h3 id="diet-day-title" class="text-xl font-bold text-accent-dark mb-4 border-b pb-2">Day 1 Menu</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white p-4 rounded border border-neutral-200">
+                            <h4 class="font-bold text-neutral-800 flex items-center mb-2"><span class="text-xl mr-2">&#9749;</span> Breakfast</h4>
+                            <p id="diet-breakfast-base" class="text-sm font-medium text-accent-dark mb-3 bg-accent-light/10 p-2 rounded"></p>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div><span class="font-semibold text-neutral-700 block mb-1">Rogelio's Plate:</span><p id="diet-breakfast-rog"></p></div>
+                                <div><span class="font-semibold text-neutral-700 block mb-1">Ruilin's Plate:</span><p id="diet-breakfast-rui"></p></div>
+                            </div>
+                            <div class="mt-3 cursor-pointer text-xs text-neutral-500 hover:text-accent-dark font-medium" onclick="toggleRecipe('breakfast')">View Preparation Steps &darr;</div>
+                            <div id="recipe-breakfast" class="hidden mt-2 p-3 bg-neutral-50 border border-neutral-200 rounded text-sm text-neutral-700"></div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded border border-neutral-200">
+                            <h4 class="font-bold text-neutral-800 flex items-center mb-2"><span class="text-xl mr-2">&#127857;</span> Lunch</h4>
+                            <p id="diet-lunch-base" class="text-sm font-medium text-accent-dark mb-3 bg-accent-light/10 p-2 rounded"></p>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div><span class="font-semibold text-neutral-700 block mb-1">Rogelio's Plate:</span><p id="diet-lunch-rog"></p></div>
+                                <div><span class="font-semibold text-neutral-700 block mb-1">Ruilin's Plate:</span><p id="diet-lunch-rui"></p></div>
+                            </div>
+                            <div class="mt-3 cursor-pointer text-xs text-neutral-500 hover:text-accent-dark font-medium" onclick="toggleRecipe('lunch')">View Preparation Steps &darr;</div>
+                            <div id="recipe-lunch" class="hidden mt-2 p-3 bg-neutral-50 border border-neutral-200 rounded text-sm text-neutral-700"></div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded border border-neutral-200">
+                            <h4 class="font-bold text-neutral-800 flex items-center mb-2"><span class="text-xl mr-2">&#127834;</span> Dinner</h4>
+                            <p id="diet-dinner-base" class="text-sm font-medium text-accent-dark mb-3 bg-accent-light/10 p-2 rounded"></p>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div><span class="font-semibold text-neutral-700 block mb-1">Rogelio's Plate:</span><p id="diet-dinner-rog"></p></div>
+                                <div><span class="font-semibold text-neutral-700 block mb-1">Ruilin's Plate:</span><p id="diet-dinner-rui"></p></div>
+                            </div>
+                            <div class="mt-3 cursor-pointer text-xs text-neutral-500 hover:text-accent-dark font-medium" onclick="toggleRecipe('dinner')">View Preparation Steps &darr;</div>
+                            <div id="recipe-dinner" class="hidden mt-2 p-3 bg-neutral-50 border border-neutral-200 rounded text-sm text-neutral-700"></div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded border border-neutral-200">
+                            <h4 class="font-bold text-neutral-800 flex items-center mb-2"><span class="text-xl mr-2">&#127822;</span> Daily Snacks</h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div><span class="font-semibold text-neutral-700 block mb-1">Rogelio:</span><p id="diet-snack-rog"></p></div>
+                                <div><span class="font-semibold text-neutral-700 block mb-1">Ruilin:</span><p id="diet-snack-rui"></p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="content-workout" class="tab-content hidden fade-in">
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-2">7-Day Training Split</h2>
+            <p class="text-neutral-600"><strong>4 Days Lifting, 3 Days Active Recovery.</strong> Time commitment: 45-60 minutes per session. This is the optimal volume for a busy 38-year-old student. Focus on progressive overload (lifting slightly heavier or doing one more rep each week).</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
+            <div class="flex flex-wrap border-b border-neutral-200 bg-neutral-50" id="workout-day-selectors">
+                </div>
+            
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4 border-b pb-3">
+                    <h3 id="workout-day-title" class="text-xl font-bold text-accent-dark">Day 1: Upper Body Push (Chest Focus)</h3>
+                    <span id="workout-time" class="bg-neutral-100 text-neutral-600 text-xs px-2 py-1 rounded font-mono">&#9201; 60 mins</span>
+                </div>
+                
+                <p id="workout-focus" class="italic text-neutral-500 text-sm mb-6"></p>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm whitespace-nowrap">
+                        <thead class="uppercase tracking-wider border-b-2 border-neutral-200 text-neutral-500 font-semibold">
+                            <tr>
+                                <th class="pb-3 px-2">Exercise</th>
+                                <th class="pb-3 px-2 text-center">Sets</th>
+                                <th class="pb-3 px-2 text-center">Reps</th>
+                                <th class="pb-3 px-2">Rest / Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workout-table-body" class="text-neutral-700">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<div id="costco-modal" class="fixed inset-0 bg-neutral-900/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 fade-in">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative">
+        <div class="sticky top-0 bg-white border-b border-neutral-200 p-5 flex justify-between items-center rounded-t-xl z-10">
+            <div>
+                <h3 class="text-xl font-bold text-neutral-900 flex items-center"><span class="mr-2">&#128722;</span> Costco Edmonton Shopping List</h3>
+                <p class="text-xs text-neutral-500 mt-1">Estimated prices in CAD (Edmonton warehouses). Prices may vary.</p>
+            </div>
+            <button onclick="closeCostcoList()" class="text-neutral-400 hover:text-neutral-800 transition-colors text-2xl font-bold p-2">&times;</button>
+        </div>
+        
+        <div class="p-6">
+            <div class="bg-neutral-50 p-4 rounded-lg border border-neutral-200 mb-6 text-sm text-neutral-700">
+                <strong>Note on Bulk Buying:</strong> The total at checkout will be higher because you are buying in bulk at Costco. However, items like protein powder, rice, oil, and oats will last you several weeks to a month. We've calculated the "Actual Weekly Cost" to show your true burn rate.
+            </div>
+
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full text-left text-sm border-collapse">
+                    <thead>
+                        <tr class="border-b-2 border-neutral-800 text-neutral-900 font-semibold bg-neutral-100">
+                            <th class="py-2 px-3">Category / Item</th>
+                            <th class="py-2 px-3 text-center">Unit / Size</th>
+                            <th class="py-2 px-3 text-right">Est. Price (CAD)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-neutral-700 divide-y divide-neutral-200">
+                        <tr class="bg-neutral-50"><td colspan="3" class="py-2 px-3 font-semibold text-accent-dark">Proteins</td></tr>
+                        <tr><td class="py-2 px-3">Kirkland Signature Chicken Breasts (Frozen)</td><td class="py-2 px-3 text-center">2 kg</td><td class="py-2 px-3 text-right">$22.99</td></tr>
+                        <tr><td class="py-2 px-3">Kirkland Signature Lean Ground Beef</td><td class="py-2 px-3 text-center">1.5 kg</td><td class="py-2 px-3 text-right">$24.99</td></tr>
+                        <tr><td class="py-2 px-3">Pork Tenderloin (Lean)</td><td class="py-2 px-3 text-center">2-pack</td><td class="py-2 px-3 text-right">$18.99</td></tr>
+                        <tr><td class="py-2 px-3">Farmed Salmon Fillets or Bangus</td><td class="py-2 px-3 text-center">1 kg</td><td class="py-2 px-3 text-right">$34.99</td></tr>
+                        <tr><td class="py-2 px-3">Kirkland Greek Yogurt (Plain, 0%)</td><td class="py-2 px-3 text-center">3 x 500g</td><td class="py-2 px-3 text-right">$12.99</td></tr>
+                        <tr><td class="py-2 px-3">Large Eggs</td><td class="py-2 px-3 text-center">2.5 dozen</td><td class="py-2 px-3 text-right">$9.99</td></tr>
+                        <tr><td class="py-2 px-3">Kaizen or Optimum Nutrition Whey Protein</td><td class="py-2 px-3 text-center">2 kg bag</td><td class="py-2 px-3 text-right">$64.99</td></tr>
+                        
+                        <tr class="bg-neutral-50"><td colspan="3" class="py-2 px-3 font-semibold text-accent-dark">Carbs</td></tr>
+                        <tr><td class="py-2 px-3">Jasmine or Brown Rice</td><td class="py-2 px-3 text-center">8 kg</td><td class="py-2 px-3 text-right">$18.99</td></tr>
+                        <tr><td class="py-2 px-3">Quaker Oats</td><td class="py-2 px-3 text-center">Large Box</td><td class="py-2 px-3 text-right">$10.99</td></tr>
+                        <tr><td class="py-2 px-3">Sweet Potatoes</td><td class="py-2 px-3 text-center">3 kg bag</td><td class="py-2 px-3 text-right">$8.99</td></tr>
+                        
+                        <tr class="bg-neutral-50"><td colspan="3" class="py-2 px-3 font-semibold text-accent-dark">Produce & Veggies</td></tr>
+                        <tr><td class="py-2 px-3">Broccoli Florets (Fresh or Frozen)</td><td class="py-2 px-3 text-center">Large bag</td><td class="py-2 px-3 text-right">$7.99</td></tr>
+                        <tr><td class="py-2 px-3">Spinach / Mixed Greens</td><td class="py-2 px-3 text-center">Large tub</td><td class="py-2 px-3 text-right">$5.99</td></tr>
+                        <tr><td class="py-2 px-3">Bananas</td><td class="py-2 px-3 text-center">Large bunch</td><td class="py-2 px-3 text-right">$2.99</td></tr>
+                        <tr><td class="py-2 px-3">Frozen Mixed Berries</td><td class="py-2 px-3 text-center">2 kg</td><td class="py-2 px-3 text-right">$14.99</td></tr>
+                        <tr><td class="py-2 px-3">Onions & Garlic</td><td class="py-2 px-3 text-center">Mesh bags</td><td class="py-2 px-3 text-right">$9.99</td></tr>
+                        
+                        <tr class="bg-neutral-50"><td colspan="3" class="py-2 px-3 font-semibold text-accent-dark">Pantry Staples & Fats</td></tr>
+                        <tr><td class="py-2 px-3">Kirkland Extra Virgin Olive Oil</td><td class="py-2 px-3 text-center">1 Liter</td><td class="py-2 px-3 text-right">$19.99</td></tr>
+                        <tr><td class="py-2 px-3">Almonds or Walnuts</td><td class="py-2 px-3 text-center">1.3 kg bag</td><td class="py-2 px-3 text-right">$15.99</td></tr>
+                        <tr><td class="py-2 px-3">Kraft All Natural Peanut Butter</td><td class="py-2 px-3 text-center">2 x 1 kg</td><td class="py-2 px-3 text-right">$11.99</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="bg-neutral-800 text-white p-5 rounded-lg">
+                <div class="flex justify-between items-center mb-2 border-b border-neutral-600 pb-2">
+                    <span class="font-medium text-neutral-300">Total Upfront Checkout Cost:</span>
+                    <span class="text-xl font-bold">~ $318.82 CAD</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="font-medium text-accent-light block">Actual Estimated Weekly Cost:</span>
+                        <span class="text-xs text-neutral-400 font-normal">(Amortizing bulk items like rice, oil, protein over ~4 weeks)</span>
+                    </div>
+                    <span class="text-2xl font-bold text-accent-light">~ $95.50 CAD</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- DATA STORE ---
+
+    const dietData = {
+        1: {
+            title: "Day 1: Asian Fusion Staples",
+            breakfast: {
+                base: "Garlic Spinach Scrambled Eggs & Rice",
+                rog: "3 Eggs, 1 handful spinach, 1/2 cup rice.",
+                rui: "4 Eggs, 2 handfuls spinach, 1 cup rice.",
+                recipe: "1. Sauté day-old rice with minced garlic. <br>2. Scramble eggs in a shared pan. Toss in spinach at the end until wilted. Divide into respective portions."
+            },
+            lunch: {
+                base: "Soy-Ginger Chicken Breast with Broccoli",
+                rog: "150g Chicken, 1 cup broccoli, 1/2 cup rice.",
+                rui: "200g Chicken, 1.5 cups broccoli, 1 cup rice.",
+                recipe: "1. Marinate bulk chicken breast in soy sauce, grated ginger, garlic, and a dash of sesame oil.<br>2. Bake or pan-fry. Steam broccoli. Portion out accordingly."
+            },
+            dinner: {
+                base: "Stir-fried Lean Beef & Bok Choy",
+                rog: "150g Beef, 1 cup bok choy, 1/2 cup rice.",
+                rui: "200g Beef, 1.5 cups bok choy, 1 cup rice.",
+                recipe: "1. Slice lean beef thin. Sauté garlic and ginger, add beef.<br>2. Add chopped bok choy, 1 tbsp oyster sauce, 1 tbsp water. Stir fry until greens are cooked."
+            },
+            snack: {
+                rog: "1 scoop Whey Protein, 1 Apple.",
+                rui: "1 scoop Whey Protein, 1 Banana, Handful of almonds."
+            }
+        },
+        2: {
+            title: "Day 2: Noodle & Fish Day",
+            breakfast: {
+                base: "Oatmeal with Protein Powder & Fruit",
+                rog: "1/2 cup oats, 1 scoop whey, 1/2 banana.",
+                rui: "3/4 cup oats, 1.5 scoops whey, 1 whole banana.",
+                recipe: "1. Boil water or milk, add oats. Cook for 3 mins.<br>2. Turn off heat, stir in protein powder. Top with sliced fruit."
+            },
+            lunch: {
+                base: "Leftover Beef & Bok Choy",
+                rog: "Standard container (leftovers from Day 1 dinner).",
+                rui: "Larger container (leftovers).",
+                recipe: "Pack leftovers the night before. Microwave for 2 mins."
+            },
+            dinner: {
+                base: "Steamed White Fish (Bangus or Tilapia) with Soy-Scallion Sauce",
+                rog: "1 fillet, side of greens, 1/2 cup rice.",
+                rui: "1.5 fillets, side of greens, 1 cup rice.",
+                recipe: "1. Steam fish for 10-12 mins.<br>2. Heat 1 tbsp oil, pour over chopped scallions and ginger. Add soy sauce. Pour over fish."
+            },
+            snack: {
+                rog: "Greek Yogurt (plain, 0%).",
+                rui: "Greek Yogurt with 1 tbsp honey and walnuts."
+            }
+        },
+        3: {
+            title: "Day 3: Adobo/Braised Chicken",
+            breakfast: {
+                base: "Boiled Eggs and Whole Wheat Toast",
+                rog: "2 Eggs, 2 slices toast, 1/2 avocado.",
+                rui: "3 Eggs, 3 slices toast, 1/2 avocado.",
+                recipe: "Boil eggs for 8 mins. Mash avocado on toast, season with salt and pepper."
+            },
+            lunch: {
+                base: "Chicken Adobo / Braised Soy Chicken",
+                rog: "150g Chicken breast, 1/2 cup brown rice.",
+                rui: "250g Chicken breast/thigh mix, 1 cup brown rice.",
+                recipe: "Simmer chicken chunks in 1/4 cup soy sauce, 1/4 cup vinegar (or rice wine), bay leaves, garlic, and peppercorns for 25 mins."
+            },
+            dinner: {
+                base: "Tofu & Mixed Veggie Stir-fry",
+                rog: "150g firm tofu, 1.5 cups mixed veggies, no rice.",
+                rui: "200g firm tofu, 2 cups veggies, 1/2 cup rice.",
+                recipe: "Pan-fry cubed tofu until golden. Remove. Sauté broccoli, peppers, carrots. Return tofu, add a splash of soy/oyster sauce."
+            },
+            snack: {
+                rog: "Protein Shake.",
+                rui: "Protein Shake + 2 Rice Cakes with Peanut Butter."
+            }
+        },
+        4: {
+            title: "Day 4: Restock & Prep",
+            breakfast: {
+                base: "Leftover Rice & Fried Eggs",
+                rog: "2 Eggs, 1/2 cup rice.",
+                rui: "3 Eggs, 1 cup rice, dash of soy sauce.",
+                recipe: "Quick pan fry. Ruilin can add chili crisp or soy sauce for extra flavor."
+            },
+            lunch: {
+                base: "Leftover Adobo/Braised Chicken",
+                rog: "Standard portion.",
+                rui: "Larger portion.",
+                recipe: "Microwave and eat."
+            },
+            dinner: {
+                base: "Shrimp & Egg Fried Rice",
+                rog: "150g Shrimp, 1 egg, 3/4 cup rice (total), lots of peas/carrots.",
+                rui: "200g Shrimp, 2 eggs, 1.5 cups rice (total).",
+                recipe: "Use minimal oil. Scramble egg, push aside. Cook shrimp. Add day-old rice and mixed frozen veggies. Toss with light soy sauce."
+            },
+            snack: {
+                rog: "Cottage cheese or Edamame.",
+                rui: "Edamame (1.5 cups) and 1 apple."
+            }
+        },
+        5: {
+            title: "Day 5: Lean Western Prep",
+            breakfast: {
+                base: "Protein Pancakes",
+                rog: "1 scoop protein, 1 egg, 1/2 banana blended.",
+                rui: "1.5 scoops protein, 2 eggs, 1 banana blended.",
+                recipe: "Blend ingredients into a batter. Cook on a non-stick pan like regular pancakes."
+            },
+            lunch: {
+                base: "Tuna Salad Sandwiches",
+                rog: "1 can tuna (with greek yogurt), 2 slices whole wheat bread.",
+                rui: "1.5 cans tuna, 3 slices whole wheat bread (or a large wrap).",
+                recipe: "Mix canned tuna with plain greek yogurt, salt, pepper, and diced celery. Serve on bread."
+            },
+            dinner: {
+                base: "Oven-Roasted Chicken & Sweet Potatoes",
+                rog: "150g chicken, 150g sweet potatoes, asparagus.",
+                rui: "250g chicken, 250g sweet potatoes, asparagus.",
+                recipe: "Toss diced sweet potatoes and chicken breast in olive oil spray, salt, paprika. Roast at 400°F for 25 mins."
+            },
+            snack: {
+                rog: "Handful of almonds.",
+                rui: "Handful of almonds + Protein Shake."
+            }
+        },
+        6: {
+            title: "Day 6: Re-feed / Heavy Shift Day",
+            breakfast: {
+                base: "Oatmeal & Eggs",
+                rog: "1/2 cup oats, 2 scrambled eggs.",
+                rui: "1 cup oats, 3 scrambled eggs.",
+                recipe: "Cook oats. Scramble eggs on the side. High energy start for Ruilin's restaurant shift."
+            },
+            lunch: {
+                base: "Chicken & Broccoli Wrap",
+                rog: "1 wrap, 100g chicken, lettuce.",
+                rui: "2 wraps, 200g chicken, lettuce.",
+                recipe: "Use leftover roasted chicken from Day 5. Wrap in whole wheat tortillas with mustard or light mayo."
+            },
+            dinner: {
+                base: "Beef Pochero / Clear Beef Stew",
+                rog: "Lean beef chunks, cabbage, green beans, 1/2 cup rice.",
+                rui: "Beef chunks, cabbage, beans, plantains (saba), 1 cup rice.",
+                recipe: "Boil lean beef stew meat until tender. Add veggies in the last 10 minutes. A comforting shared meal."
+            },
+            snack: {
+                rog: "Protein shake.",
+                rui: "Protein shake + 1 banana."
+            }
+        },
+        7: {
+            title: "Day 7: Meal Prep Sunday",
+            breakfast: {
+                base: "Spinach Omelette",
+                rog: "2 whole eggs, 2 whites.",
+                rui: "3 whole eggs, 2 whites, slice of toast.",
+                recipe: "Whisk eggs, pour into hot pan, fold in fresh spinach and a sprinkle of cheese."
+            },
+            lunch: {
+                base: "Leftover Beef Stew",
+                rog: "Standard portion.",
+                rui: "Large portion.",
+                recipe: "Clear out the fridge before shopping."
+            },
+            dinner: {
+                base: "Pan-seared Salmon / Any Fish",
+                rog: "1 fillet, steamed veggies.",
+                rui: "1.5 fillets, steamed veggies, 1 cup quinoa/rice.",
+                recipe: "Pan-sear fish 4 mins per side. Prepare large batch of rice/quinoa for the upcoming week's prep."
+            },
+            snack: {
+                rog: "Carrot sticks & Hummus.",
+                rui: "Carrot sticks, Hummus, Protein shake."
+            }
+        }
+    };
+
+    const workoutData = {
+        1: {
+            title: "Day 1: Upper Body Push (Chest & Triceps)",
+            time: "60 mins",
+            focus: "Primary goal: Build chest mass. Keep shoulder blades retracted during presses.",
+            exercises: [
+                { name: "Barbell Bench Press (Flat)", sets: "4", reps: "6-8", notes: "Heavy compound. Rest 2-3 mins." },
+                { name: "Incline Dumbbell Press", sets: "3", reps: "8-10", notes: "Focus on upper chest. Rest 90s." },
+                { name: "Cable Crossovers (Low to High)", sets: "3", reps: "12-15", notes: "Squeeze chest at top. Rest 60s." },
+                { name: "Overhead Tricep Extension", sets: "3", reps: "10-12", notes: "Use cable or dumbbell." },
+                { name: "Cable Crunches (Abs)", sets: "4", reps: "15-20", notes: "Weighted abs build blocky muscle." }
+            ]
+        },
+        2: {
+            title: "Day 2: Upper Body Pull (Back & Biceps)",
+            time: "50 mins",
+            focus: "Posture correction (vital for PhD students who sit a lot).",
+            exercises: [
+                { name: "Lat Pulldowns or Pull-ups", sets: "4", reps: "8-10", notes: "Wide grip. Squeeze back." },
+                { name: "Seated Cable Rows", sets: "3", reps: "10-12", notes: "Keep chest up, don't use momentum." },
+                { name: "Face Pulls", sets: "3", reps: "15", notes: "Crucial for shoulder health and posture." },
+                { name: "Dumbbell Hammer Curls", sets: "3", reps: "10-12", notes: "Builds forearms and biceps." },
+                { name: "Hanging Leg Raises (Abs)", sets: "3", reps: "To failure", notes: "Strict form, no swinging." }
+            ]
+        },
+        3: {
+            title: "Day 3: Active Recovery & Brain Work",
+            time: "30 mins",
+            focus: "Allow muscles to repair. Keep blood flowing without taxing the nervous system.",
+            exercises: [
+                { name: "Brisk Walking / Incline Treadmill", sets: "-", reps: "30 mins", notes: "Heart rate around 110-120 bpm. Good time for audiobooks." },
+                { name: "Dynamic Stretching / Yoga", sets: "-", reps: "10 mins", notes: "Focus on hip flexors and chest." },
+                { name: "PhD Focus Block", sets: "-", reps: "-", notes: "Use the saved physical energy for deep thesis work." }
+            ]
+        },
+        4: {
+            title: "Day 4: Lower Body (Legs & Core)",
+            time: "60 mins",
+            focus: "Legs release a massive amount of growth hormone beneficial for the whole body.",
+            exercises: [
+                { name: "Leg Press or Squats", sets: "4", reps: "8-10", notes: "Warm up properly. Deep range of motion." },
+                { name: "Romanian Deadlifts (RDLs)", sets: "3", reps: "10-12", notes: "Focus on hamstring stretch." },
+                { name: "Leg Extensions", sets: "3", reps: "12-15", notes: "Squeeze quads at top." },
+                { name: "Calf Raises", sets: "4", reps: "15-20", notes: "Pause at bottom for stretch." },
+                { name: "Plank (Abs)", sets: "3", reps: "60 secs", notes: "Squeeze glutes and brace core." }
+            ]
+        },
+        5: {
+            title: "Day 5: Full Upper Body (Chest Emphasis)",
+            time: "55 mins",
+            focus: "Second stimulus for chest in the week. Slightly lighter weights, higher reps for hypertrophy.",
+            exercises: [
+                { name: "Incline Barbell Press", sets: "3", reps: "8-10", notes: "Rest 2 mins." },
+                { name: "Dips (Chest leaning forward)", sets: "3", reps: "AMRAP", notes: "Add weight if bodyweight is too easy." },
+                { name: "Dumbbell Pullovers", sets: "3", reps: "12", notes: "Expands ribcage, hits lats/chest." },
+                { name: "Lateral Raises (Shoulders)", sets: "4", reps: "15", notes: "Light weight, strict form." },
+                { name: "Russian Twists (Abs)", sets: "3", reps: "20 per side", notes: "Use a medicine ball or weight plate." }
+            ]
+        },
+        6: {
+            title: "Day 6: Active Recovery",
+            time: "40 mins",
+            focus: "Mental reset. Get outside if Edmonton weather permits, otherwise light indoor cardio.",
+            exercises: [
+                { name: "Stationary Bike or Swimming", sets: "-", reps: "30 mins", notes: "Low intensity." },
+                { name: "Foam Rolling", sets: "-", reps: "10 mins", notes: "Focus on upper back and legs." }
+            ]
+        },
+        7: {
+            title: "Day 7: Complete Rest",
+            time: "0 mins",
+            focus: "Growth happens while resting. Prepare food and mentally prep for the upcoming week.",
+            exercises: [
+                { name: "Meal Prep", sets: "-", reps: "1-2 hours", notes: "Cook rice, chicken, and chop veggies for Mon-Wed." },
+                { name: "Complete Rest", sets: "-", reps: "-", notes: "Sleep 8+ hours." }
+            ]
+        }
+    };
+
+    // --- LOGIC ---
+
+    // Tab Switching
+    function switchTab(tabId) {
+        // Hide all contents
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        // Remove active from all tabs
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        // Show target content
+        document.getElementById(`content-${tabId}`).classList.remove('hidden');
+        // Set active tab
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+
+    // Schedule Toggle (Weekday / Saturday / Sunday)
+    function toggleSchedule(type) {
+        const btnWeekday = document.getElementById('btn-sched-weekday');
+        const btnSaturday = document.getElementById('btn-sched-saturday');
+        const btnSunday = document.getElementById('btn-sched-sunday');
+        
+        const viewWeekday = document.getElementById('schedule-weekday');
+        const viewSaturday = document.getElementById('schedule-saturday');
+        const viewSunday = document.getElementById('schedule-sunday');
+
+        // Reset all buttons to inactive state
+        [btnWeekday, btnSaturday, btnSunday].forEach(btn => {
+            btn.classList.replace('text-neutral-800', 'text-neutral-500');
+            btn.classList.replace('bg-white', 'hover:text-neutral-700');
+            btn.classList.remove('shadow-sm');
+        });
+
+        // Hide all views
+        [viewWeekday, viewSaturday, viewSunday].forEach(view => {
+            view.classList.add('hidden');
+        });
+
+        // Activate selected
+        if (type === 'weekday') {
+            btnWeekday.classList.replace('text-neutral-500', 'text-neutral-800');
+            btnWeekday.classList.replace('hover:text-neutral-700', 'bg-white');
+            btnWeekday.classList.add('shadow-sm');
+            viewWeekday.classList.remove('hidden');
+        } else if (type === 'saturday') {
+            btnSaturday.classList.replace('text-neutral-500', 'text-neutral-800');
+            btnSaturday.classList.replace('hover:text-neutral-700', 'bg-white');
+            btnSaturday.classList.add('shadow-sm');
+            viewSaturday.classList.remove('hidden');
+        } else if (type === 'sunday') {
+            btnSunday.classList.replace('text-neutral-500', 'text-neutral-800');
+            btnSunday.classList.replace('hover:text-neutral-700', 'bg-white');
+            btnSunday.classList.add('shadow-sm');
+            viewSunday.classList.remove('hidden');
+        }
+    }
+
+    // Toggle Recipe Visibility
+    function toggleRecipe(mealType) {
+        const recipeDiv = document.getElementById(`recipe-${mealType}`);
+        if (recipeDiv.classList.contains('hidden')) {
+            recipeDiv.classList.remove('hidden');
+            recipeDiv.classList.add('fade-in');
+        } else {
+            recipeDiv.classList.add('hidden');
+            recipeDiv.classList.remove('fade-in');
+        }
+    }
+
+    // Modal Functions for Costco List
+    function openCostcoList() {
+        document.getElementById('costco-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCostcoList() {
+        document.getElementById('costco-modal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Load Diet Day
+    function loadDietDay(dayNumber) {
+        const data = dietData[dayNumber];
+        document.getElementById('diet-day-title').innerText = data.title;
+        
+        // Update Base Meals
+        document.getElementById('diet-breakfast-base').innerText = `Base: ${data.breakfast.base}`;
+        document.getElementById('diet-lunch-base').innerText = `Base: ${data.lunch.base}`;
+        document.getElementById('diet-dinner-base').innerText = `Base: ${data.dinner.base}`;
+
+        // Update Portions
+        document.getElementById('diet-breakfast-rog').innerText = data.breakfast.rog;
+        document.getElementById('diet-breakfast-rui').innerText = data.breakfast.rui;
+        
+        document.getElementById('diet-lunch-rog').innerText = data.lunch.rog;
+        document.getElementById('diet-lunch-rui').innerText = data.lunch.rui;
+        
+        document.getElementById('diet-dinner-rog').innerText = data.dinner.rog;
+        document.getElementById('diet-dinner-rui').innerText = data.dinner.rui;
+        
+        document.getElementById('diet-snack-rog').innerText = data.snack.rog;
+        document.getElementById('diet-snack-rui').innerText = data.snack.rui;
+
+        // Update recipes
+        document.getElementById('recipe-breakfast').innerHTML = data.breakfast.recipe;
+        document.getElementById('recipe-lunch').innerHTML = data.lunch.recipe;
+        document.getElementById('recipe-dinner').innerHTML = data.dinner.recipe;
+
+        // Hide recipes when switching days
+        ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+            const el = document.getElementById(`recipe-${meal}`);
+            if(el) el.classList.add('hidden');
+        });
+
+        // Update active button state
+        document.querySelectorAll('.diet-day-btn').forEach(btn => btn.classList.remove('active', 'bg-accent-dark', 'text-white'));
+        document.getElementById(`btn-diet-day-${dayNumber}`).classList.add('active', 'bg-accent-dark', 'text-white');
+    }
+
+    function loadWorkoutDay(dayNumber) {
+        const data = workoutData[dayNumber];
+        document.getElementById('workout-day-title').innerText = data.title;
+        document.getElementById('workout-time').innerHTML = `&#9201; ${data.time}`;
+        document.getElementById('workout-focus').innerText = data.focus;
+
+        const tbody = document.getElementById('workout-table-body');
+        tbody.innerHTML = ''; 
+        
+        data.exercises.forEach(ex => {
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-neutral-100 last:border-0 hover:bg-white transition";
+            tr.innerHTML = `
+                <td class="py-3 px-2 font-medium">${ex.name}</td>
+                <td class="py-3 px-2 text-center bg-neutral-50/50">${ex.sets}</td>
+                <td class="py-3 px-2 text-center">${ex.reps}</td>
+                <td class="py-3 px-2 text-xs text-neutral-500">${ex.notes}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Update active button state
+        document.querySelectorAll('.workout-day-btn').forEach(btn => {
+            btn.classList.remove('border-accent-dark', 'text-accent-dark', 'bg-white');
+            btn.classList.add('border-transparent', 'text-neutral-500');
+        });
+        const activeBtn = document.getElementById(`btn-workout-day-${dayNumber}`);
+        activeBtn.classList.remove('border-transparent', 'text-neutral-500');
+        activeBtn.classList.add('border-accent-dark', 'text-accent-dark', 'bg-white');
+    }
+
+    // Initialization
+    window.onload = () => {
+        // Generate Diet Buttons
+        const dietContainer = document.getElementById('diet-day-selectors');
+        for (let i = 1; i <= 7; i++) {
+            const btn = document.createElement('button');
+            btn.id = `btn-diet-day-${i}`;
+            btn.className = `diet-day-btn px-4 py-2 rounded-md border border-neutral-200 text-sm font-medium transition hover:bg-neutral-100`;
+            btn.innerText = `Day ${i}`;
+            btn.onclick = () => loadDietDay(i);
+            dietContainer.appendChild(btn);
+        }
+
+        // Generate Workout Buttons
+        const workoutContainer = document.getElementById('workout-day-selectors');
+        for (let i = 1; i <= 7; i++) {
+            const btn = document.createElement('button');
+            btn.id = `btn-workout-day-${i}`;
+            btn.className = `workout-day-btn flex-1 py-3 text-center border-b-2 border-transparent text-sm font-medium hover:bg-white transition`;
+            btn.innerText = `Day ${i}`;
+            btn.onclick = () => loadWorkoutDay(i);
+            workoutContainer.appendChild(btn);
+        }
+
+        // Load defaults
+        loadDietDay(1);
+        loadWorkoutDay(1);
+
+        // --- CHART.JS INITIALIZATION ---
+        const ctxProgress = document.getElementById('progressChart').getContext('2d');
+        new Chart(ctxProgress, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 4', 'Week 8', 'Week 12'],
+                datasets: [
+                    {
+                        label: 'Rogelio (kg)',
+                        data: [68, 68.2, 68.5, 69.0], 
+                        borderColor: '#0f766e', 
+                        backgroundColor: '#0f766e',
+                        tension: 0.3,
+                    },
+                    {
+                        label: 'Ruilin (kg)',
+                        data: [95, 91.5, 88.0, 85.0], 
+                        borderColor: '#94a3b8', 
+                        backgroundColor: '#94a3b8',
+                        tension: 0.3,
+                        borderDash: [5, 5]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 12, font: { family: 'Inter' } } },
+                    tooltip: {
+                        backgroundColor: '#171717',
+                        titleFont: { family: 'Inter' },
+                        bodyFont: { family: 'Inter' }
+                    }
+                },
+                scales: {
+                    y: { type: 'linear', display: true, title: { display: true, text: 'Weight (kg)' }, min: 65, max: 100 }
+                }
+            }
+        });
+    };
+</script>
+
+</body>
+</html>
